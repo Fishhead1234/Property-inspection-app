@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { InspectionReport, InspectionArea, InspectionType } from './types/inspection';
 import {
   createDefaultNewReport,
@@ -8,7 +8,7 @@ import {
   deleteReport
 } from './services/storageService';
 import { downloadA4PDF } from './services/pdfGenerator';
-import { formatBytes } from './utils/imageCompressor';
+import { formatBytes, compressMultipleImages } from './utils/imageCompressor';
 import { AreaSection } from './components/AreaSection';
 import { SignaturePad } from './components/SignaturePad';
 import { PDFPreviewModal } from './components/PDFPreviewModal';
@@ -28,7 +28,10 @@ import {
   Calendar,
   Building,
   ArrowLeft,
-  ChevronRight
+  ChevronRight,
+  FolderOpen,
+  Image as ImageIcon,
+  UploadCloud
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -42,6 +45,15 @@ export const App: React.FC = () => {
   const [saveStatus, setSaveStatus] = useState<string>('Saved locally');
   const [newAreaName, setNewAreaName] = useState('');
   const [showAddAreaModal, setShowAddAreaModal] = useState(false);
+
+  // Quick Photo Hub state in Tab 3
+  const [hubTargetAreaId, setHubTargetAreaId] = useState<string>('');
+  const [hubIsCompressing, setHubIsCompressing] = useState(false);
+  const [hubProgress, setHubProgress] = useState<{ current: number; total: number } | null>(null);
+  const [hubIsDragging, setHubIsDragging] = useState(false);
+  const hubCameraInputRef = useRef<HTMLInputElement>(null);
+  const hubFileInputRef = useRef<HTMLInputElement>(null);
+  const hubFolderInputRef = useRef<HTMLInputElement>(null);
 
   // Load all reports from IndexedDB
   const loadReports = useCallback(async () => {
@@ -159,6 +171,60 @@ export const App: React.FC = () => {
     }
     await loadReports();
     setCurrentView('dashboard');
+  };
+
+  const currentUploadTargetId = hubTargetAreaId || (report.areas[0]?.id ?? '');
+
+  const handleHubFiles = async (fileList: File[], overrideTargetId?: string) => {
+    const chosenAreaId = overrideTargetId || currentUploadTargetId;
+    if (!chosenAreaId) {
+      alert('Please select a room to add photos to.');
+      return;
+    }
+
+    const imageFiles = fileList.filter(
+      (file) =>
+        file.type.startsWith('image/') ||
+        /\.(jpe?g|png|webp|avif|bmp|gif|heic|heif)$/i.test(file.name)
+    );
+
+    if (imageFiles.length === 0) {
+      alert('No valid image files found in the selection. Please select JPG, PNG, WEBP, or HEIC photos.');
+      return;
+    }
+
+    setHubIsCompressing(true);
+    setHubProgress({ current: 0, total: imageFiles.length });
+
+    try {
+      const compressed = await compressMultipleImages(imageFiles, (curr, total) => {
+        setHubProgress({ current: curr, total });
+      });
+
+      const updatedAreas = report.areas.map((a) =>
+        a.id === chosenAreaId ? { ...a, photos: [...(a.photos || []), ...compressed] } : a
+      );
+      setReport({ ...report, areas: updatedAreas });
+    } catch (err) {
+      console.error('Hub photo compression error:', err);
+      alert('Error compressing photos. Please check file format and try again.');
+    } finally {
+      setHubIsCompressing(false);
+      setHubProgress(null);
+      if (hubFileInputRef.current) hubFileInputRef.current.value = '';
+      if (hubCameraInputRef.current) hubCameraInputRef.current.value = '';
+      if (hubFolderInputRef.current) hubFolderInputRef.current.value = '';
+    }
+  };
+
+  const handleHubDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setHubIsDragging(false);
+    const files = e.dataTransfer.files;
+    if (files && files.length > 0) {
+      await handleHubFiles(Array.from(files));
+    }
   };
 
   const handleUpdateArea = (updatedArea: InspectionArea) => {
@@ -708,22 +774,174 @@ export const App: React.FC = () => {
                   </div>
                 </div>
 
+                {/* Quick Photo Upload Hub */}
+                <div className="photo-upload-hub">
+                  <div className="photo-upload-hub-header">
+                    <div>
+                      <h3 className="card-title flex-center gap-xs">
+                        <Camera size={18} className="text-accent" />
+                        <span>Add Evidence Photos</span>
+                      </h3>
+                      <p className="card-subtitle mt-2xs">
+                        Take a live photo on-site, select from gallery, or import an entire folder
+                      </p>
+                    </div>
+
+                    <div className="hub-room-select-group">
+                      <label className="text-xs font-bold text-muted uppercase">Assign to Room:</label>
+                      <select
+                        value={currentUploadTargetId}
+                        onChange={(e) => setHubTargetAreaId(e.target.value)}
+                        className="hub-room-select"
+                      >
+                        {report.areas.map((area) => (
+                          <option key={area.id} value={area.id}>
+                            {area.name} ({area.photos?.length || 0} photos)
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+
+                  {/* Hidden Inputs for Hub */}
+                  <input
+                    ref={hubCameraInputRef}
+                    type="file"
+                    accept="image/*"
+                    capture="environment"
+                    onChange={(e) => e.target.files && handleHubFiles(Array.from(e.target.files))}
+                    className="hidden"
+                  />
+                  <input
+                    ref={hubFileInputRef}
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={(e) => e.target.files && handleHubFiles(Array.from(e.target.files))}
+                    className="hidden"
+                  />
+                  <input
+                    ref={hubFolderInputRef}
+                    type="file"
+                    // @ts-expect-error webkitdirectory is standard in HTML5 for folder upload
+                    webkitdirectory=""
+                    directory=""
+                    multiple
+                    onChange={(e) => e.target.files && handleHubFiles(Array.from(e.target.files))}
+                    className="hidden"
+                  />
+
+                  {/* 3 Prominent Action Buttons */}
+                  <div className="photo-actions-grid">
+                    <button
+                      type="button"
+                      onClick={() => hubCameraInputRef.current?.click()}
+                      disabled={hubIsCompressing}
+                      className="btn-primary photo-action-btn"
+                      title="Open device camera to take an inspection photo"
+                    >
+                      <Camera size={16} className="stroke-[2.5]" />
+                      <span>Take Photo</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => hubFileInputRef.current?.click()}
+                      disabled={hubIsCompressing}
+                      className="btn-secondary photo-action-btn"
+                      title="Select one or multiple photos from gallery or files"
+                    >
+                      <ImageIcon size={16} />
+                      <span>Select Photos</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => hubFolderInputRef.current?.click()}
+                      disabled={hubIsCompressing}
+                      className="btn-secondary photo-action-btn"
+                      title="Upload all photos directly from an entire folder"
+                    >
+                      <FolderOpen size={16} />
+                      <span>Load from Folder</span>
+                    </button>
+                  </div>
+
+                  {/* Drag & Drop Zone */}
+                  <div
+                    className={`photo-drop-zone ${hubIsDragging ? 'dragging' : ''}`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setHubIsDragging(true);
+                    }}
+                    onDragLeave={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setHubIsDragging(false);
+                    }}
+                    onDrop={handleHubDrop}
+                  >
+                    <UploadCloud size={20} className="text-muted mb-2xs" />
+                    <p className="drop-zone-text">
+                      Drag &amp; drop photos or whole folders into{' '}
+                      <strong>
+                        {report.areas.find((a) => a.id === currentUploadTargetId)?.name || 'the selected room'}
+                      </strong>
+                    </p>
+                  </div>
+
+                  {/* Compression Progress Bar */}
+                  {hubIsCompressing && hubProgress && (
+                    <div className="compression-progress-card mt-sm">
+                      <div className="flex-between text-xs font-semibold mb-xs">
+                        <span className="flex-center gap-xs text-accent">
+                          <Sparkles size={14} className="animate-spin" />
+                          <span>Compressing &amp; Optimizing High-Res Photos...</span>
+                        </span>
+                        <span>
+                          {hubProgress.current} / {hubProgress.total}
+                        </span>
+                      </div>
+                      <div className="progress-bar-bg">
+                        <div
+                          className="progress-bar-fill"
+                          style={{
+                            width: `${(hubProgress.current / hubProgress.total) * 100}%`
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+
                 {/* Photos Grouped by Area */}
                 {totalPhotos === 0 ? (
                   <div className="content-card text-center py-xl">
-                    <Camera size={40} className="text-muted mx-auto mb-sm" />
+                    <Camera size={36} className="text-muted mx-auto mb-xs" />
                     <h3 className="text-base font-bold text-slate-200 mb-xs">No Photos Captured Yet</h3>
-                    <p className="text-xs text-muted mb-md">
-                      Go to any room in the 'Rooms' tab to take or upload evidence photos.
+                    <p className="text-xs text-muted max-w-md mx-auto mb-md">
+                      Use the uploader above to take a photo with your camera, pick pictures from your gallery,
+                      or load an entire folder. You can also add photos directly within each room in the 'Rooms' tab.
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => setActiveTab('areas')}
-                      className="btn-primary btn-sm mx-auto flex-center gap-xs"
-                    >
-                      <CheckSquare size={14} />
-                      <span>Go to Rooms Checklist</span>
-                    </button>
+                    <div className="flex-center gap-xs">
+                      <button
+                        type="button"
+                        onClick={() => hubCameraInputRef.current?.click()}
+                        className="btn-primary btn-sm flex-center gap-xs"
+                      >
+                        <Camera size={14} />
+                        <span>Take First Photo</span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('areas')}
+                        className="btn-secondary btn-sm flex-center gap-xs"
+                      >
+                        <CheckSquare size={14} />
+                        <span>Go to Rooms Checklist</span>
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-lg">
@@ -738,9 +956,24 @@ export const App: React.FC = () => {
                                 {area.photos.length} photo{area.photos.length > 1 ? 's' : ''}
                               </span>
                             </h3>
-                            <span className={`condition-pill ${area.overallCondition}`}>
-                              {area.overallCondition.toUpperCase()}
-                            </span>
+
+                            <div className="flex items-center gap-xs">
+                              <span className={`condition-pill ${area.overallCondition}`}>
+                                {area.overallCondition.toUpperCase()}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setHubTargetAreaId(area.id);
+                                  hubFileInputRef.current?.click();
+                                }}
+                                className="btn-secondary btn-sm flex-center gap-2xs text-xs"
+                                title={`Add more photos to ${area.name}`}
+                              >
+                                <Plus size={13} />
+                                <span>Add More</span>
+                              </button>
+                            </div>
                           </div>
 
                           <div className="photos-grid">

@@ -1,7 +1,16 @@
 import React, { useState, useRef } from 'react';
 import type { InspectionPhoto } from '../types/inspection';
 import { compressMultipleImages, formatBytes } from '../utils/imageCompressor';
-import { Camera, Image as ImageIcon, Trash2, Maximize2, X, Sparkles } from 'lucide-react';
+import {
+  Camera,
+  Image as ImageIcon,
+  FolderOpen,
+  Trash2,
+  Maximize2,
+  X,
+  Sparkles,
+  UploadCloud
+} from 'lucide-react';
 
 interface Props {
   photos: InspectionPhoto[];
@@ -12,50 +21,92 @@ interface Props {
 export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+  const folderInputRef = useRef<HTMLInputElement>(null);
   const [isCompressing, setIsCompressing] = useState(false);
   const [compressProgress, setCompressProgress] = useState<{ current: number; total: number } | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<InspectionPhoto | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const handleFiles = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
+  const processFiles = async (fileList: File[]) => {
+    // Filter only images (supports folders containing non-image files or hidden files)
+    const imageFiles = fileList.filter(
+      (file) =>
+        file.type.startsWith('image/') ||
+        /\.(jpe?g|png|webp|avif|bmp|gif|heic|heif)$/i.test(file.name)
+    );
+
+    if (imageFiles.length === 0) {
+      alert('No valid image files found. Please select JPG, PNG, WEBP, or HEIC photos.');
+      return;
+    }
 
     setIsCompressing(true);
-    setCompressProgress({ current: 0, total: files.length });
+    setCompressProgress({ current: 0, total: imageFiles.length });
 
     try {
-      const fileList = Array.from(files);
-      const compressed = await compressMultipleImages(fileList, (curr, total) => {
+      const compressed = await compressMultipleImages(imageFiles, (curr, total) => {
         setCompressProgress({ current: curr, total });
       });
 
       onChange([...photos, ...compressed]);
     } catch (err) {
       console.error('Photo compression error:', err);
-      alert('Error compressing photo. Please try again.');
+      alert('Error compressing photos. Please try again.');
     } finally {
       setIsCompressing(false);
       setCompressProgress(null);
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (cameraInputRef.current) cameraInputRef.current.value = '';
+      if (folderInputRef.current) folderInputRef.current.value = '';
     }
   };
 
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    processFiles(Array.from(files));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const files = e.dataTransfer.files;
+    if (!files || files.length === 0) return;
+    await processFiles(Array.from(files));
+  };
+
   const handleUpdateCaption = (id: string, caption: string) => {
-    const updated = photos.map(p => p.id === id ? { ...p, caption } : p);
+    const updated = photos.map((p) => (p.id === id ? { ...p, caption } : p));
     onChange(updated);
   };
 
   const handleDelete = (id: string) => {
     if (confirm('Delete this inspection photo?')) {
-      onChange(photos.filter(p => p.id !== id));
+      onChange(photos.filter((p) => p.id !== id));
     }
   };
 
   // Calculate total savings for this area
   const totalOriginal = photos.reduce((acc, p) => acc + p.originalSize, 0);
   const totalCompressed = photos.reduce((acc, p) => acc + p.compressedSize, 0);
-  const totalSavings = totalOriginal > 0 ? Math.round(((totalOriginal - totalCompressed) / totalOriginal) * 100) : 0;
+  const totalSavings =
+    totalOriginal > 0
+      ? Math.round(((totalOriginal - totalCompressed) / totalOriginal) * 100)
+      : 0;
 
   return (
     <div className="photo-manager">
@@ -63,7 +114,7 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
         <div>
           <h4 className="photo-manager-title">Evidence Photos ({photos.length})</h4>
           <p className="photo-manager-desc">
-            Smart-compressed for high A4 clarity without bloating file size
+            Smart-compressed for high A4 clarity (1600px) with automatic size optimization
           </p>
         </div>
 
@@ -75,36 +126,52 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
         )}
       </div>
 
-      {/* Action Buttons: Camera & Gallery */}
-      <div className="photo-actions-row">
-        {/* Hidden Camera Input */}
-        <input
-          ref={cameraInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handleFiles}
-          className="hidden"
-          id={`cam-${areaName}`}
-        />
-        {/* Hidden File Picker Input */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={handleFiles}
-          className="hidden"
-          id={`file-${areaName}`}
-        />
+      {/* Hidden File Inputs */}
+      {/* 1. Camera Native Capture */}
+      <input
+        ref={cameraInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        onChange={handleInputChange}
+        className="hidden"
+        id={`cam-${areaName}`}
+      />
 
+      {/* 2. Gallery / Multi-photo Picker */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        multiple
+        onChange={handleInputChange}
+        className="hidden"
+        id={`file-${areaName}`}
+      />
+
+      {/* 3. Folder / Directory Picker */}
+      <input
+        ref={folderInputRef}
+        type="file"
+        // @ts-expect-error webkitdirectory is standard in HTML5 for folder upload
+        webkitdirectory=""
+        directory=""
+        multiple
+        onChange={handleInputChange}
+        className="hidden"
+        id={`folder-${areaName}`}
+      />
+
+      {/* Action Buttons: Take Photo, Select Photos, Load from Folder */}
+      <div className="photo-actions-grid">
         <button
           type="button"
           onClick={() => cameraInputRef.current?.click()}
           disabled={isCompressing}
-          className="btn-primary flex-1 flex-center gap-xs"
+          className="btn-primary photo-action-btn"
+          title="Open camera to take photo on device"
         >
-          <Camera size={17} />
+          <Camera size={16} className="stroke-[2.5]" />
           <span>Take Photo</span>
         </button>
 
@@ -112,11 +179,36 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
           type="button"
           onClick={() => fileInputRef.current?.click()}
           disabled={isCompressing}
-          className="btn-secondary flex-1 flex-center gap-xs"
+          className="btn-secondary photo-action-btn"
+          title="Choose one or multiple photos from gallery or files"
         >
-          <ImageIcon size={17} />
-          <span>Upload Gallery</span>
+          <ImageIcon size={16} />
+          <span>Select Photos</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => folderInputRef.current?.click()}
+          disabled={isCompressing}
+          className="btn-secondary photo-action-btn"
+          title="Upload all photos directly from an entire folder"
+        >
+          <FolderOpen size={16} />
+          <span>Load Folder</span>
+        </button>
+      </div>
+
+      {/* Drag & Drop Zone */}
+      <div
+        className={`photo-drop-zone ${isDragging ? 'dragging' : ''}`}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+      >
+        <UploadCloud size={20} className="text-muted mb-2xs" />
+        <p className="drop-zone-text">
+          Drag &amp; drop photos or whole folders here, or use the buttons above
+        </p>
       </div>
 
       {/* Compression Progress Bar */}
@@ -125,14 +217,18 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
           <div className="flex-between text-xs font-semibold mb-xs">
             <span className="flex-center gap-xs text-accent">
               <Sparkles size={14} className="animate-spin" />
-              <span>Compressing &amp; Optimizing...</span>
+              <span>Compressing &amp; Optimizing High-Res Photos...</span>
             </span>
-            <span>{compressProgress.current} / {compressProgress.total}</span>
+            <span>
+              {compressProgress.current} / {compressProgress.total}
+            </span>
           </div>
           <div className="progress-bar-bg">
             <div
               className="progress-bar-fill"
-              style={{ width: `${(compressProgress.current / compressProgress.total) * 100}%` }}
+              style={{
+                width: `${(compressProgress.current / compressProgress.total) * 100}%`
+              }}
             />
           </div>
         </div>
@@ -141,21 +237,28 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
       {/* Photos Grid */}
       {photos.length === 0 ? (
         <div className="empty-photos-box">
-          <Camera size={28} className="text-muted mb-xs" />
+          <Camera size={26} className="text-muted mb-xs" />
           <p className="text-xs text-muted">No evidence photos added for {areaName} yet.</p>
         </div>
       ) : (
         <div className="photos-grid">
           {photos.map((photo) => {
-            const savings = photo.originalSize > 0 
-              ? Math.round(((photo.originalSize - photo.compressedSize) / photo.originalSize) * 100) 
-              : 0;
+            const savings =
+              photo.originalSize > 0
+                ? Math.round(
+                    ((photo.originalSize - photo.compressedSize) / photo.originalSize) * 100
+                  )
+                : 0;
 
             return (
               <div key={photo.id} className="photo-card">
                 <div className="photo-image-wrapper">
-                  <img src={photo.dataUrl} alt={photo.caption || 'Evidence'} className="photo-thumb" />
-                  
+                  <img
+                    src={photo.dataUrl}
+                    alt={photo.caption || 'Evidence'}
+                    className="photo-thumb"
+                  />
+
                   {/* Floating Action Overlay */}
                   <div className="photo-overlay-actions">
                     <button
@@ -192,8 +295,15 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
                     className="photo-caption-input"
                   />
                   <div className="photo-meta-row">
-                    <span className="photo-dim">{photo.width}×{photo.height}px</span>
-                    <span className="photo-date">{new Date(photo.takenAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    <span className="photo-dim">
+                      {photo.width}×{photo.height}px
+                    </span>
+                    <span className="photo-date">
+                      {new Date(photo.takenAt).toLocaleTimeString([], {
+                        hour: '2-digit',
+                        minute: '2-digit'
+                      })}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -210,7 +320,9 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
               <div>
                 <h3 className="lightbox-title">{areaName} Evidence</h3>
                 <p className="lightbox-subtitle">
-                  {previewPhoto.width}×{previewPhoto.height}px • {formatBytes(previewPhoto.compressedSize)} (from {formatBytes(previewPhoto.originalSize)})
+                  {previewPhoto.width}×{previewPhoto.height}px •{' '}
+                  {formatBytes(previewPhoto.compressedSize)} (from{' '}
+                  {formatBytes(previewPhoto.originalSize)})
                 </p>
               </div>
               <button
@@ -241,3 +353,5 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
     </div>
   );
 };
+
+export default PhotoManager;

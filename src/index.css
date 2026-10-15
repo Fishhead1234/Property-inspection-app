@@ -706,6 +706,58 @@ textarea:focus {
   margin-bottom: var(--space-md);
 }
 
+.photo-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+
+@media (max-width: 580px) {
+  .photo-actions-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.photo-action-btn {
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.photo-drop-zone {
+  border: 1.5px dashed rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: rgba(15, 23, 42, 0.25);
+  margin-bottom: var(--space-md);
+  transition: all 0.2s ease;
+}
+
+.photo-drop-zone.dragging {
+  border-color: var(--border-focus);
+  background: rgba(56, 189, 248, 0.12);
+  transform: scale(1.005);
+}
+
+.drop-zone-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+
 .compression-progress-card {
   background: var(--bg-surface);
   padding: var(--space-sm);
@@ -1553,5 +1605,46 @@ textarea:focus {
   border-radius: var(--radius-md);
   padding: var(--space-sm) var(--space-md);
 }
+
+/* ==========================================================================
+   Tab 3 Quick Photo Upload Hub
+   ========================================================================== */
+
+.photo-upload-hub {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.photo-upload-hub-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  gap: var(--space-sm);
+  flex-wrap: wrap;
+}
+
+.hub-room-select-group {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  flex-wrap: wrap;
+}
+
+.hub-room-select {
+  padding: 8px 12px;
+  background: var(--bg-card) !important;
+  border: 1px solid var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+  border-radius: var(--radius-md) !important;
+  font-size: 13px !important;
+  font-weight: 600;
+  min-width: 200px;
+}
+
 
 
