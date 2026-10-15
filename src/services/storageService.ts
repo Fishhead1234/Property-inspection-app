@@ -86,16 +86,16 @@ export function createDefaultNewReport(): InspectionReport {
   return {
     id: 'rep_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
     title: 'Routine Inspection Report',
-    propertyAddress: '142 Oceanview Parade, Apt 4B',
+    propertyAddress: '',
     inspectionDate: dateStr,
     inspectionType: 'routine',
     inspectorName: 'Alex Mercer',
     inspectorCompany: 'Apex Property Management',
     inspectorEmail: 'alex.mercer@apexpm.com',
     inspectorPhone: '+1 (555) 234-8901',
-    tenantName: 'Sarah & Liam Jenkins',
-    landlordName: 'Horizon Realty Trust',
-    generalSummary: 'Property is in excellent, well-maintained overall condition. Minor scuff note recorded in hallway. All smoke alarms tested and functional.',
+    tenantName: '',
+    landlordName: '',
+    generalSummary: '',
     areas: defaultAreas,
     signatures: {
       inspector: {
@@ -105,9 +105,9 @@ export function createDefaultNewReport(): InspectionReport {
       }
     },
     keysHandover: {
-      keysProvided: 3,
-      remotesProvided: 2,
-      notes: 'Front door keys x2, mailbox key x1, garage remote x2 verified.'
+      keysProvided: 0,
+      remotesProvided: 0,
+      notes: ''
     },
     createdAt: now.toISOString(),
     updatedAt: now.toISOString()
