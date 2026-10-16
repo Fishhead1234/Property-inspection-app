@@ -14,6 +14,10 @@ import { SignaturePad } from './components/SignaturePad';
 import { PDFPreviewModal } from './components/PDFPreviewModal';
 import { DashboardView } from './components/DashboardView';
 import { MultiShotCameraModal } from './components/MultiShotCameraModal';
+import { AuthModal } from './components/AuthModal';
+import type { User } from '@supabase/supabase-js';
+import { subscribeToAuthChanges, getCurrentUser } from './services/authService';
+import { syncReportToCloud, fetchReportsFromCloud, deleteReportFromCloud } from './services/cloudSyncService';
 import {
   Home,
   CheckSquare,
@@ -32,7 +36,8 @@ import {
   ChevronRight,
   FolderOpen,
   Image as ImageIcon,
-  UploadCloud
+  UploadCloud,
+  Cloud
 } from 'lucide-react';
 
 export const App: React.FC = () => {
@@ -43,6 +48,9 @@ export const App: React.FC = () => {
   const [previewTarget, setPreviewTarget] = useState<InspectionReport | null>(null);
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
+  const [isSyncingCloud, setIsSyncingCloud] = useState(false);
   const [saveStatus, setSaveStatus] = useState<string>('Saved locally');
   const [newAreaName, setNewAreaName] = useState('');
   const [showAddAreaModal, setShowAddAreaModal] = useState(false);
@@ -76,29 +84,73 @@ export const App: React.FC = () => {
     loadReports();
   }, [loadReports]);
 
+  // Sync all reports from cloud
+  const handleSyncCloud = useCallback(async () => {
+    setIsSyncingCloud(true);
+    try {
+      const { reports: cloudReports, error } = await fetchReportsFromCloud();
+      if (!error && cloudReports.length > 0) {
+        await loadReports();
+      }
+    } catch (err) {
+      console.warn('Sync error:', err);
+    } finally {
+      setIsSyncingCloud(false);
+    }
+  }, [loadReports]);
+
+  // Listen to auth state changes and initial session
+  useEffect(() => {
+    getCurrentUser().then((user) => {
+      setCurrentUser(user);
+      if (user) {
+        handleSyncCloud();
+      }
+    });
+
+    const unsubscribe = subscribeToAuthChanges((user) => {
+      setCurrentUser(user);
+      if (user) {
+        handleSyncCloud();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [handleSyncCloud]);
+
   // Auto-save whenever active report changes (while in editor mode)
   useEffect(() => {
     if (currentView !== 'editor' || !report || !report.id) return;
     const timer = setTimeout(() => {
       saveReport(report)
         .then(() => {
-          setSaveStatus(`Saved • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`);
+          setSaveStatus(
+            currentUser
+              ? `Cloud & Local Saved • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+              : `Saved locally • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+          );
           getAllReports().then((list) => {
             const sorted = [...list].sort(
               (a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
             );
             setSavedReports(sorted);
           });
+          if (currentUser) {
+            syncReportToCloud(report, currentUser).catch((err) => console.warn('Cloud sync error:', err));
+          }
         })
         .catch((err) => console.error('Auto-save error:', err));
     }, 600);
 
     return () => clearTimeout(timer);
-  }, [report, currentView]);
+  }, [report, currentView, currentUser]);
 
   const handleStartNew = async () => {
     const fresh = createDefaultNewReport();
     await saveReport(fresh);
+    if (currentUser) {
+      syncReportToCloud(fresh, currentUser).catch(() => {});
+    }
     setReport(fresh);
     await loadReports();
     setActiveTab('details');
@@ -114,6 +166,9 @@ export const App: React.FC = () => {
   const handleLoadDemo = async () => {
     const demo = createSampleDemoReport();
     await saveReport(demo);
+    if (currentUser) {
+      syncReportToCloud(demo, currentUser).catch(() => {});
+    }
     setReport(demo);
     await loadReports();
     setActiveTab('details');
@@ -123,6 +178,9 @@ export const App: React.FC = () => {
   const handleDeleteReport = async (id: string) => {
     if (confirm('Are you sure you want to delete this inspection report? This cannot be undone.')) {
       await deleteReport(id);
+      if (currentUser) {
+        deleteReportFromCloud(id).catch(() => {});
+      }
       const remaining = savedReports.filter((r) => r.id !== id);
       setSavedReports(remaining);
       if (report.id === id) {
@@ -332,6 +390,19 @@ export const App: React.FC = () => {
               <div className="app-actions">
                 <button
                   type="button"
+                  onClick={() => setShowAuthModal(true)}
+                  className="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-xs text-slate-200 transition-all flex items-center gap-1.5"
+                  title="Cloud Account & Database Settings"
+                >
+                  <Cloud size={14} className={currentUser ? 'text-emerald-400' : 'text-blue-400'} />
+                  <span className="hidden sm:inline">
+                    {currentUser ? currentUser.email?.split('@')[0] : 'Cloud Sync'}
+                  </span>
+                  {currentUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                </button>
+
+                <button
+                  type="button"
                   onClick={handleStartNew}
                   className="btn-header-new"
                   title="Start a new property inspection"
@@ -364,6 +435,21 @@ export const App: React.FC = () => {
               </div>
 
               <div className="app-actions">
+                {/* Cloud sync button */}
+                <button
+                  type="button"
+                  onClick={() => setShowAuthModal(true)}
+                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-xs text-slate-200 transition-all mr-xs"
+                  title="Cloud Account & Sync"
+                >
+                  <Cloud size={14} className={currentUser ? 'text-emerald-400' : 'text-blue-400'} />
+                  {currentUser ? (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  ) : (
+                    <span className="hidden lg:inline text-muted text-[11px]">Local</span>
+                  )}
+                </button>
+
                 {/* Auto-save indicator */}
                 <div className="hidden sm:flex items-center gap-xs text-xs text-muted mr-xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
@@ -419,6 +505,10 @@ export const App: React.FC = () => {
              ========================================================================== */
           <DashboardView
             reports={savedReports}
+            currentUser={currentUser}
+            onOpenAuth={() => setShowAuthModal(true)}
+            onSyncCloud={handleSyncCloud}
+            isSyncing={isSyncingCloud}
             onStartNew={handleStartNew}
             onOpenReport={handleOpenReport}
             onLoadDemo={handleLoadDemo}
@@ -1292,6 +1382,22 @@ export const App: React.FC = () => {
           onClose={() => {
             setShowPreviewModal(false);
             setPreviewTarget(null);
+          }}
+        />
+      )}
+
+      {/* ==========================================================================
+          Cloud Authentication & Database Connection Modal
+          ========================================================================== */}
+      {showAuthModal && (
+        <AuthModal
+          currentUser={currentUser}
+          onClose={() => setShowAuthModal(false)}
+          onAuthChange={(user) => {
+            setCurrentUser(user);
+            if (user) {
+              handleSyncCloud();
+            }
           }}
         />
       )}

@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { InspectionReport } from '../types/inspection';
 import { formatBytes } from '../utils/imageCompressor';
+import type { User } from '@supabase/supabase-js';
 import {
   Plus,
   Home,
@@ -15,11 +16,18 @@ import {
   Search,
   CheckCircle2,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  Cloud,
+  RefreshCw,
+  User as UserIcon
 } from 'lucide-react';
 
 interface Props {
   reports: InspectionReport[];
+  currentUser?: User | null;
+  onOpenAuth?: () => void;
+  onSyncCloud?: () => void;
+  isSyncing?: boolean;
   onStartNew: () => void;
   onOpenReport: (report: InspectionReport) => void;
   onLoadDemo: () => void;
@@ -31,6 +39,10 @@ interface Props {
 
 export const DashboardView: React.FC<Props> = ({
   reports,
+  currentUser,
+  onOpenAuth,
+  onSyncCloud,
+  isSyncing,
   onStartNew,
   onOpenReport,
   onLoadDemo,
@@ -98,6 +110,46 @@ export const DashboardView: React.FC<Props> = ({
                 <span>Load Sample Inspection</span>
               </button>
             )}
+          </div>
+
+          {/* Cloud Sync & Account Status Bar */}
+          <div className="mt-4 pt-3.5 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-3 text-xs">
+            {currentUser ? (
+              <div className="flex items-center gap-2 text-slate-300">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="font-semibold text-white">Cloud Active:</span>
+                <span className="text-slate-400 font-mono text-[11px] truncate max-w-[200px]">{currentUser.email}</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 text-slate-400">
+                <Cloud size={14} className="text-blue-400 shrink-0" />
+                <span>Local Database (Sign in to sync across devices & team)</span>
+              </div>
+            )}
+
+            <div className="flex items-center gap-2">
+              {currentUser && onSyncCloud && (
+                <button
+                  type="button"
+                  onClick={onSyncCloud}
+                  disabled={isSyncing}
+                  className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all text-xs"
+                >
+                  <RefreshCw size={12} className={isSyncing ? 'animate-spin text-blue-400' : ''} />
+                  <span>{isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
+                </button>
+              )}
+              {onOpenAuth && (
+                <button
+                  type="button"
+                  onClick={onOpenAuth}
+                  className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 flex items-center gap-1.5 transition-all text-xs font-medium"
+                >
+                  <UserIcon size={12} />
+                  <span>{currentUser ? 'Account & Settings' : 'Connect Cloud / Sign In'}</span>
+                </button>
+              )}
+            </div>
           </div>
         </div>
 
