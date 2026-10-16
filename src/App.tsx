@@ -379,13 +379,8 @@ export const App: React.FC = () => {
                   <Home size={22} />
                 </div>
                 <div>
-                  <div className="flex-center gap-xs">
-                    <h1 className="app-title">InspectA4</h1>
-                    <span className="text-[10px] bg-sky-500/20 text-sky-300 font-bold px-1.5 py-0.5 rounded border border-sky-500/30">
-                      A4 PRO
-                    </span>
-                  </div>
-                  <p className="app-subtitle">Mobile Property Inspection &amp; Report Generator</p>
+                  <h1 className="app-title">InspectNow</h1>
+                  <p className="app-subtitle hidden sm:block">Mobile Property Inspection &amp; Report Generator</p>
                 </div>
               </div>
 
@@ -398,7 +393,7 @@ export const App: React.FC = () => {
                   title="Cloud Account & Database Settings"
                 >
                   <Cloud size={16} className={currentUser ? 'text-emerald-400' : 'text-sky-400'} />
-                  <span>
+                  <span className="hidden sm:inline">
                     {currentUser ? currentUser.email?.split('@')[0] : 'Connect Cloud'}
                   </span>
                   {currentUser ? (
@@ -415,33 +410,35 @@ export const App: React.FC = () => {
                   title="Start a new property inspection"
                 >
                   <Plus size={16} className="stroke-[2.5]" />
-                  <span>Start New Inspection</span>
+                  <span className="hidden sm:inline">Start New Inspection</span>
+                  <span className="sm:hidden">New</span>
                 </button>
               </div>
             </>
           ) : (
             /* Editor Header */
             <>
-              <div className="flex items-center gap-sm">
+              <div className="flex items-center gap-xs min-w-0">
                 <button
                   type="button"
                   onClick={handleBackToDashboard}
-                  className="btn-back-dashboard"
+                  className="btn-back-dashboard shrink-0"
                   title="Return to Properties Dashboard"
                 >
                   <ArrowLeft size={15} />
-                  <span>All Properties ({savedReports.length})</span>
+                  <span className="hidden sm:inline">All Properties ({savedReports.length})</span>
+                  <span className="sm:hidden">Back</span>
                 </button>
 
-                <div className="hidden md:flex items-center gap-xs text-xs text-muted">
-                  <ChevronRight size={14} />
+                <div className="hidden md:flex items-center gap-xs text-xs text-muted truncate">
+                  <ChevronRight size={14} className="shrink-0" />
                   <span className="font-semibold text-slate-200 truncate max-w-[200px]">
                     {report.propertyAddress || 'Untitled Property'}
                   </span>
                 </div>
               </div>
 
-              <div className="app-actions">
+              <div className="app-actions shrink-0">
                 {/* Cloud sync button */}
                 <button
                   type="button"
@@ -461,7 +458,7 @@ export const App: React.FC = () => {
                 </button>
 
                 {/* Auto-save indicator */}
-                <div className="hidden sm:flex items-center gap-xs text-xs text-muted mr-xs">
+                <div className="hidden md:flex items-center gap-xs text-xs text-muted mr-xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                   <span>{saveStatus}</span>
                 </div>
@@ -482,18 +479,18 @@ export const App: React.FC = () => {
                     setPreviewTarget(report);
                     setShowPreviewModal(true);
                   }}
-                  className="btn-secondary btn-sm flex-center gap-xs"
+                  className="btn-secondary btn-sm flex-center gap-xs hidden md:inline-flex"
                   title="Preview A4 document"
                 >
                   <Eye size={14} />
-                  <span className="hidden sm:inline">Preview</span>
+                  <span>Preview</span>
                 </button>
 
                 <button
                   type="button"
                   onClick={() => handleDownloadReport(report)}
                   disabled={isExporting}
-                  className="btn-primary btn-sm flex-center gap-xs"
+                  className="btn-primary btn-sm flex-center gap-xs hidden md:inline-flex"
                   title="Export A4 PDF directly"
                 >
                   <Download size={14} />

@@ -208,7 +208,7 @@ export const PDFPreviewModal: React.FC<Props> = ({ report, onClose }) => {
                     <h1 className="a4-banner-title">PROPERTY CONDITION REPORT</h1>
                     <p className="a4-banner-sub">
                       {report.inspectionType.toUpperCase().replace('-', ' ')} INSPECTION •{' '}
-                      {report.inspectorCompany || 'InspectA4 Official'}
+                      {report.inspectorCompany || 'InspectNow Official'}
                     </p>
                   </div>
                   <span className="a4-certified-badge">CERTIFIED A4</span>
@@ -326,7 +326,7 @@ export const PDFPreviewModal: React.FC<Props> = ({ report, onClose }) => {
                 </table>
 
                 <div className="a4-page-footer">
-                  <span>InspectA4 Certified Inspection Report • Smart-Compressed</span>
+                  <span>InspectNow Certified Inspection Report • Smart-Compressed</span>
                   <span>Page 1</span>
                 </div>
               </div>
@@ -386,7 +386,7 @@ export const PDFPreviewModal: React.FC<Props> = ({ report, onClose }) => {
                 </div>
 
                 <div className="a4-page-footer">
-                  <span>InspectA4 Certified Inspection Report • Room Checklist</span>
+                  <span>InspectNow Certified Inspection Report • Room Checklist</span>
                   <span>Page 2</span>
                 </div>
               </div>
@@ -439,7 +439,7 @@ export const PDFPreviewModal: React.FC<Props> = ({ report, onClose }) => {
                   </div>
 
                   <div className="a4-page-footer">
-                    <span>InspectA4 Certified Inspection Report • Evidence Appendix</span>
+                    <span>InspectNow Certified Inspection Report • Evidence Appendix</span>
                     <span>Photo Appendix</span>
                   </div>
                 </div>
@@ -504,7 +504,7 @@ export const PDFPreviewModal: React.FC<Props> = ({ report, onClose }) => {
                 </div>
 
                 <div className="a4-page-footer">
-                  <span>InspectA4 Certified Inspection Report • Declarations</span>
+                  <span>InspectNow Certified Inspection Report • Declarations</span>
                   <span>Final Page</span>
                 </div>
               </div>

@@ -1,5 +1,5 @@
 -- ==============================================================================
--- InspectA4 Property Inspection App - Supabase Database Schema
+-- InspectNow Property Inspection App - Supabase Database Schema
 -- Run this script in your Supabase SQL Editor (https://supabase.com/dashboard)
 -- ==============================================================================
 

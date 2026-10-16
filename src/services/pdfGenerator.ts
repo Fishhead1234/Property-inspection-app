@@ -66,7 +66,7 @@ export async function generateA4PDF(report: InspectionReport): Promise<Blob> {
   doc.setFontSize(9);
   doc.setTextColor(224, 242, 254);
   const typeLabel = report.inspectionType.toUpperCase().replace('-', ' ') + ' INSPECTION';
-  doc.text(`${typeLabel} • ${report.inspectorCompany || 'InspectA4 Official'}`, margin + 8, currentY + 19);
+  doc.text(`${typeLabel} • ${report.inspectorCompany || 'InspectNow Official'}`, margin + 8, currentY + 19);
 
   currentY += 32;
 
@@ -528,7 +528,7 @@ export async function generateA4PDF(report: InspectionReport): Promise<Blob> {
     doc.setLineWidth(0.3);
     doc.line(margin, pageHeight - margin - 2, pageWidth - margin, pageHeight - margin - 2);
 
-    doc.text('InspectA4 Certified Inspection Report • Generated with Smart Compression', margin, pageHeight - margin + 2);
+    doc.text('InspectNow Certified Inspection Report • Generated with Smart Compression', margin, pageHeight - margin + 2);
     doc.text(`Page ${p} of ${totalPages}`, pageWidth - margin, pageHeight - margin + 2, { align: 'right' });
   }
 

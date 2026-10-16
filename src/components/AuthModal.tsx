@@ -175,29 +175,29 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
         style={{ maxWidth: '520px', width: '92%', borderRadius: '16px', overflow: 'hidden' }}
       >
         {/* Modal Header */}
-        <div className="lightbox-header" style={{ padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400">
+        <div className="lightbox-header" style={{ padding: '1rem 1.25rem', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+          <div className="flex items-center gap-2.5 min-w-0 flex-1">
+            <div className="w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 shrink-0">
               <Cloud size={20} />
             </div>
-            <div>
-              <h3 className="lightbox-title text-base font-semibold">
-                {currentUser ? 'Cloud Account & Team Sync' : 'InspectA4 Cloud Workspace'}
+            <div className="min-w-0 flex-1">
+              <h3 className="lightbox-title text-sm sm:text-base font-semibold truncate">
+                {currentUser ? 'Cloud Account & Team Sync' : 'InspectNow Cloud Workspace'}
               </h3>
-              <p className="lightbox-subtitle text-xs text-slate-400">
+              <p className="lightbox-subtitle text-xs text-slate-400 truncate">
                 {currentUser
                   ? `Signed in as ${currentUser.email}`
                   : 'Sync inspections across your phone, tablet, and team'}
               </p>
             </div>
           </div>
-          <button type="button" onClick={onClose} className="btn-icon-circle">
+          <button type="button" onClick={onClose} className="btn-icon-circle shrink-0 ml-2">
             <X size={18} />
           </button>
         </div>
 
         {/* Modal Body */}
-        <div style={{ padding: '1.5rem' }}>
+        <div style={{ padding: '1.25rem 1rem' }}>
           {error && (
             <div className="auth-status-box auth-status-error" style={{ marginBottom: '14px' }}>
               <AlertCircle size={16} className="shrink-0 mt-0.5" />

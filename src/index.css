@@ -1,5 +1,5 @@
 /* ==========================================================================
-   InspectA4 Modern Mobile & Desktop Design System
+   InspectNow Modern Mobile & Desktop Design System
    Vanilla CSS with CSS Custom Properties, Smooth Transitions & Glassmorphism
    ========================================================================== */
 
@@ -54,8 +54,16 @@
   --shadow-lg: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
 }
 
-* {
+html {
   box-sizing: border-box;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100vw;
+  -webkit-text-size-adjust: 100%;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
   margin: 0;
   padding: 0;
   -webkit-tap-highlight-color: transparent;
@@ -69,6 +77,16 @@ body {
   font-size: 14px;
   -webkit-font-smoothing: antialiased;
   min-height: 100vh;
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
+  position: relative;
+}
+
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: hidden;
 }
 
 /* ==========================================================================
@@ -2672,6 +2690,555 @@ textarea:focus {
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* ==========================================================================
+   Comprehensive Mobile Viewport & Responsive Design (< 640px)
+   Eliminates all horizontal scrolling and fits 100% of mobile screen width
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  /* Prevent any element blowout */
+  *, *:before, *:after {
+    max-width: 100%;
+  }
+
+  /* App Shell & Layout */
+  .app-header {
+    padding: 10px 12px;
+    margin-bottom: 14px;
+  }
+
+  .app-header-content {
+    gap: 8px;
+  }
+
+  .app-brand {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .app-logo-box {
+    width: 34px;
+    height: 34px;
+    border-radius: 10px;
+  }
+
+  .app-title {
+    font-size: 16px;
+    white-space: nowrap;
+  }
+
+  .app-actions {
+    gap: 6px;
+  }
+
+  .btn-header-cloud {
+    padding: 6px 9px;
+    font-size: 11.5px;
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-header-new {
+    padding: 6px 12px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .btn-back-dashboard {
+    padding: 6px 10px;
+    font-size: 12px;
+    border-radius: var(--radius-sm);
+  }
+
+  .app-wrapper {
+    padding: 0 10px 110px 10px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden;
+  }
+
+  /* Dashboard View & Hero Card */
+  .dashboard-container {
+    padding-bottom: 24px;
+  }
+
+  .dashboard-hero-card {
+    padding: 16px 12px;
+    margin-bottom: 16px;
+    border-radius: 14px;
+  }
+
+  .hero-badge {
+    font-size: 10.5px;
+    padding: 3px 8px;
+    margin-bottom: 10px;
+    max-width: 100%;
+  }
+
+  .hero-title {
+    font-size: 20px;
+    line-height: 1.25;
+    margin-bottom: 6px;
+  }
+
+  .hero-subtitle {
+    font-size: 12.5px;
+    margin-bottom: 14px;
+    line-height: 1.5;
+  }
+
+  .hero-actions-group {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-hero-primary {
+    width: 100%;
+    min-height: 48px;
+    padding: 12px 14px;
+    font-size: 14px;
+    border-radius: 12px;
+    justify-content: center;
+  }
+
+  .btn-hero-secondary {
+    width: 100%;
+    min-height: 44px;
+    padding: 10px 14px;
+    font-size: 13px;
+    border-radius: 12px;
+    justify-content: center;
+  }
+
+  /* Cloud Banner on Mobile */
+  .dashboard-cloud-banner {
+    margin-top: 14px;
+    padding: 12px 10px;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    width: 100%;
+    border-radius: 12px;
+    box-sizing: border-box;
+  }
+
+  .cloud-banner-left {
+    min-width: 0 !important;
+    width: 100%;
+    gap: 10px;
+  }
+
+  .cloud-banner-icon-box {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    flex-shrink: 0;
+  }
+
+  .cloud-banner-title-row {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 2px;
+  }
+
+  .cloud-banner-title {
+    font-size: 13.5px;
+  }
+
+  .cloud-banner-desc {
+    font-size: 11.5px;
+    line-height: 1.35;
+    word-break: break-word;
+  }
+
+  .cloud-banner-actions {
+    width: 100%;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-cloud-connect {
+    width: 100%;
+    justify-content: center;
+    padding: 9px 12px;
+    font-size: 12.5px;
+    box-sizing: border-box;
+  }
+
+  .btn-cloud-sync {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 12px;
+    box-sizing: border-box;
+  }
+
+  /* Hero Stats */
+  .hero-stats-grid {
+    gap: 6px;
+    margin-top: 14px;
+    padding-top: 12px;
+  }
+
+  .hero-stat-box {
+    padding: 8px 4px;
+    border-radius: 8px;
+  }
+
+  .hero-stat-value {
+    font-size: 17px;
+  }
+
+  .hero-stat-label {
+    font-size: 9.5px;
+    letter-spacing: 0.02em;
+  }
+
+  /* Property Cards on Mobile */
+  .property-card {
+    padding: 14px 12px;
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .property-card-header {
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .property-address-group {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .property-address {
+    font-size: 14px;
+    word-break: break-word;
+  }
+
+  .property-subtext {
+    font-size: 11px;
+    flex-wrap: wrap;
+  }
+
+  .property-metrics-row {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .meta-chip {
+    font-size: 10.5px;
+    padding: 3px 6px;
+  }
+
+  .property-agency-tag {
+    font-size: 10.5px;
+    margin-bottom: 10px;
+  }
+
+  .property-card-actions {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .property-card-actions .btn-primary {
+    width: 100%;
+    flex: none;
+    order: -1;
+    justify-content: center;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  /* Navigation Tabs Segmented Control */
+  .nav-tabs-bar {
+    padding: 3px;
+    gap: 2px;
+    margin-bottom: 14px;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+  }
+
+  .nav-tab-btn {
+    min-width: 80px;
+    padding: 7px 6px;
+    font-size: 11.5px;
+    gap: 4px;
+  }
+
+  /* Form & Content Cards */
+  .content-card {
+    padding: 14px 12px;
+    margin-bottom: 14px;
+    border-radius: 14px;
+  }
+
+  .card-title {
+    font-size: 15px;
+  }
+
+  .card-subtitle {
+    font-size: 11.5px;
+  }
+
+  .card-title-group {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  /* Room & Area Card Accordion */
+  .area-card {
+    border-radius: 14px;
+    margin-bottom: 12px;
+  }
+
+  .area-header {
+    padding: 12px 10px;
+  }
+
+  .area-title-group {
+    gap: 8px;
+    min-width: 0;
+  }
+
+  .area-index-badge {
+    width: 24px;
+    height: 24px;
+    font-size: 11px;
+    flex-shrink: 0;
+  }
+
+  .area-title {
+    font-size: 14px;
+    word-break: break-word;
+  }
+
+  .area-meta-row {
+    gap: 4px;
+  }
+
+  .condition-pill {
+    font-size: 10.5px;
+    padding: 2px 6px;
+  }
+
+  .area-body {
+    padding: 12px 10px;
+  }
+
+  .overall-selector-box {
+    padding: 10px;
+    border-radius: 10px;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .rating-toggle-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    width: 100%;
+  }
+
+  .rating-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 8px 6px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  .items-checklist-card {
+    padding: 10px 8px;
+    border-radius: 10px;
+  }
+
+  .item-row {
+    padding: 8px;
+  }
+
+  .item-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+    width: 100%;
+  }
+
+  .item-name {
+    font-size: 12.5px;
+    word-break: break-word;
+  }
+
+  .item-pills {
+    width: 100%;
+    display: flex;
+    gap: 4px;
+  }
+
+  .micro-pill {
+    flex: 1;
+    text-align: center;
+    padding: 5px 4px;
+    font-size: 10px;
+    justify-content: center;
+  }
+
+  .item-comment-input {
+    font-size: 11px;
+  }
+
+  /* Photo Manager & Hub on Mobile */
+  .photo-manager {
+    padding: 12px 10px;
+    border-radius: 12px;
+  }
+
+  .photo-upload-hub {
+    padding: 12px 10px;
+    border-radius: 14px;
+  }
+
+  .photo-upload-hub-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .hub-room-select-group {
+    width: 100%;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 4px;
+  }
+
+  .hub-room-select {
+    width: 100% !important;
+    min-width: 0 !important;
+    font-size: 12.5px !important;
+  }
+
+  .photo-actions-grid {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .photo-action-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 10px 12px;
+    font-size: 12.5px;
+  }
+
+  .photo-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .photo-drop-zone {
+    padding: 10px;
+    font-size: 11.5px;
+  }
+
+  /* Sticky Mobile Bottom Dock */
+  .mobile-dock {
+    padding: 8px 10px calc(8px + env(safe-area-inset-bottom, 0px)) 10px;
+  }
+
+  .mobile-dock-content {
+    gap: 6px;
+  }
+
+  .dock-stats {
+    font-size: 11px;
+    gap: 4px;
+    min-width: 0;
+  }
+
+  .mobile-dock-content .btn-sm {
+    padding: 6px 9px;
+    font-size: 11.5px;
+  }
+
+  /* Modals */
+  .modal-backdrop {
+    padding: 6px;
+  }
+
+  .modal-container {
+    max-height: 94vh;
+    border-radius: 14px;
+  }
+
+  .modal-header {
+    padding: 12px;
+  }
+
+  .lightbox-content {
+    width: 95% !important;
+    margin: 0 auto;
+  }
+
+  .auth-tabs-row {
+    padding: 3px;
+    gap: 2px;
+  }
+
+  .auth-tab-btn {
+    padding: 7px 4px;
+    font-size: 11px;
+    gap: 4px;
+  }
+
+  /* A4 Preview Modal on Mobile */
+  .a4-sheet {
+    padding: 14px 10px;
+    border-radius: 4px;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+
+  .a4-sheets-scroll-container {
+    padding: 6px 4px;
+    max-height: calc(88vh - 70px);
+  }
+
+  .a4-cover-banner {
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .a4-banner-title {
+    font-size: 14px;
+  }
+
+  .a4-banner-sub {
+    font-size: 9.5px;
+  }
+
+  .a4-certified-badge {
+    font-size: 9px;
+    padding: 3px 6px;
+  }
+
+  .a4-subtable {
+    font-size: 9.5px;
+  }
+
+  .a4-photo-appendix-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .a4-grid-2 {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
 }
 
 
