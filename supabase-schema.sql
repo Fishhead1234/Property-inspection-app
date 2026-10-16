@@ -45,8 +45,25 @@ create policy "Authenticated users can delete inspections"
   to authenticated
   using (true);
 
--- Optional: Allow anonymous read-only access if you share a link to an inspection without logging in
-create policy "Allow public read access"
+-- 5. Policies for anonymous/shared link access using publishable API key:
+-- This allows anyone with your app link to sync inspections without being forced to create an account
+create policy "Allow anon select"
   on public.inspections for select
+  to anon
+  using (true);
+
+create policy "Allow anon insert"
+  on public.inspections for insert
+  to anon
+  with check (true);
+
+create policy "Allow anon update"
+  on public.inspections for update
+  to anon
+  using (true)
+  with check (true);
+
+create policy "Allow anon delete"
+  on public.inspections for delete
   to anon
   using (true);

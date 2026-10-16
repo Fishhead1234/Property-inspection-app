@@ -12,18 +12,18 @@ export interface CloudSyncStatus {
 
 export async function syncReportToCloud(
   report: InspectionReport,
-  user: User | null
+  user: User | null = null
 ): Promise<{ success: boolean; error: string | null }> {
   const client = getSupabaseClient();
-  if (!client || !user) {
-    return { success: false, error: 'User not authenticated with cloud database.' };
+  if (!client) {
+    return { success: false, error: 'Cloud database not connected.' };
   }
 
   try {
     const payload = {
       id: report.id,
-      user_id: user.id,
-      user_email: user.email || 'anonymous',
+      user_id: user ? user.id : null,
+      user_email: user ? (user.email || 'authenticated-user') : 'team-shared',
       property_address: report.propertyAddress || 'Untitled Property',
       report_json: report,
       updated_at: new Date().toISOString()

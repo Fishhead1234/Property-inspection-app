@@ -18,6 +18,7 @@ import { AuthModal } from './components/AuthModal';
 import type { User } from '@supabase/supabase-js';
 import { subscribeToAuthChanges, getCurrentUser } from './services/authService';
 import { syncReportToCloud, fetchReportsFromCloud, deleteReportFromCloud } from './services/cloudSyncService';
+import { isSupabaseConfigured } from './services/supabaseClient';
 import {
   Home,
   CheckSquare,
@@ -103,14 +104,15 @@ export const App: React.FC = () => {
   useEffect(() => {
     getCurrentUser().then((user) => {
       setCurrentUser(user);
-      if (user) {
-        handleSyncCloud();
-      }
     });
+
+    if (isSupabaseConfigured()) {
+      handleSyncCloud();
+    }
 
     const unsubscribe = subscribeToAuthChanges((user) => {
       setCurrentUser(user);
-      if (user) {
+      if (user || isSupabaseConfigured()) {
         handleSyncCloud();
       }
     });
@@ -125,7 +127,7 @@ export const App: React.FC = () => {
       saveReport(report)
         .then(() => {
           setSaveStatus(
-            currentUser
+            isSupabaseConfigured()
               ? `Cloud & Local Saved • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
               : `Saved locally • ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
           );
@@ -135,7 +137,7 @@ export const App: React.FC = () => {
             );
             setSavedReports(sorted);
           });
-          if (currentUser) {
+          if (isSupabaseConfigured()) {
             syncReportToCloud(report, currentUser).catch((err) => console.warn('Cloud sync error:', err));
           }
         })
@@ -148,7 +150,7 @@ export const App: React.FC = () => {
   const handleStartNew = async () => {
     const fresh = createDefaultNewReport();
     await saveReport(fresh);
-    if (currentUser) {
+    if (isSupabaseConfigured()) {
       syncReportToCloud(fresh, currentUser).catch(() => {});
     }
     setReport(fresh);
@@ -166,7 +168,7 @@ export const App: React.FC = () => {
   const handleLoadDemo = async () => {
     const demo = createSampleDemoReport();
     await saveReport(demo);
-    if (currentUser) {
+    if (isSupabaseConfigured()) {
       syncReportToCloud(demo, currentUser).catch(() => {});
     }
     setReport(demo);
@@ -178,7 +180,7 @@ export const App: React.FC = () => {
   const handleDeleteReport = async (id: string) => {
     if (confirm('Are you sure you want to delete this inspection report? This cannot be undone.')) {
       await deleteReport(id);
-      if (currentUser) {
+      if (isSupabaseConfigured()) {
         deleteReportFromCloud(id).catch(() => {});
       }
       const remaining = savedReports.filter((r) => r.id !== id);
