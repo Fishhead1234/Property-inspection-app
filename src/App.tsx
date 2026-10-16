@@ -13,6 +13,7 @@ import { AreaSection } from './components/AreaSection';
 import { SignaturePad } from './components/SignaturePad';
 import { PDFPreviewModal } from './components/PDFPreviewModal';
 import { DashboardView } from './components/DashboardView';
+import { MultiShotCameraModal } from './components/MultiShotCameraModal';
 import {
   Home,
   CheckSquare,
@@ -51,6 +52,7 @@ export const App: React.FC = () => {
   const [hubIsCompressing, setHubIsCompressing] = useState(false);
   const [hubProgress, setHubProgress] = useState<{ current: number; total: number } | null>(null);
   const [hubIsDragging, setHubIsDragging] = useState(false);
+  const [showHubMultiShot, setShowHubMultiShot] = useState(false);
   const hubCameraInputRef = useRef<HTMLInputElement>(null);
   const hubFileInputRef = useRef<HTMLInputElement>(null);
   const hubFolderInputRef = useRef<HTMLInputElement>(null);
@@ -224,6 +226,21 @@ export const App: React.FC = () => {
     const files = e.dataTransfer.files;
     if (files && files.length > 0) {
       await handleHubFiles(Array.from(files));
+    }
+  };
+
+  const handleHubMultiShotSave = async (dataUrls: string[]) => {
+    try {
+      const files = await Promise.all(
+        dataUrls.map(async (dataUrl, idx) => {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          return new File([blob], `hub_shot_${Date.now()}_${idx + 1}.jpg`, { type: 'image/jpeg' });
+        })
+      );
+      await handleHubFiles(files);
+    } catch (err) {
+      console.error('Error saving multi-shot photos from hub:', err);
     }
   };
 
@@ -835,13 +852,13 @@ export const App: React.FC = () => {
                   <div className="photo-actions-grid">
                     <button
                       type="button"
-                      onClick={() => hubCameraInputRef.current?.click()}
+                      onClick={() => setShowHubMultiShot(true)}
                       disabled={hubIsCompressing}
                       className="btn-primary photo-action-btn"
-                      title="Open device camera to take an inspection photo"
+                      title="Open live multi-shot camera to take continuous photos in this room"
                     >
                       <Camera size={16} className="stroke-[2.5]" />
-                      <span>Take Photo</span>
+                      <span>Multi-Shot Camera</span>
                     </button>
 
                     <button
@@ -912,6 +929,15 @@ export const App: React.FC = () => {
                         />
                       </div>
                     </div>
+                  )}
+
+                  {/* Multi-Shot Live Camera Viewfinder Modal for Hub */}
+                  {showHubMultiShot && (
+                    <MultiShotCameraModal
+                      areaName={report.areas.find((a) => a.id === currentUploadTargetId)?.name || 'Inspection Area'}
+                      onSave={handleHubMultiShotSave}
+                      onClose={() => setShowHubMultiShot(false)}
+                    />
                   )}
                 </div>
 
@@ -1048,72 +1074,74 @@ export const App: React.FC = () => {
                 ========================================================================== */}
             {activeTab === 'signatures' && (
               <div>
-                {/* Keys Handover Section */}
-                <div className="content-card">
-                  <div className="card-title-group">
-                    <div>
-                      <h2 className="card-title">Keys &amp; Access Handover</h2>
-                      <p className="card-subtitle">Document key quantities and access fobs/remotes provided</p>
-                    </div>
-                    <Key size={18} className="text-accent" />
-                  </div>
-
-                  <div className="form-grid-2 mb-md">
-                    <div>
-                      <label className="input-label">Keys Count Provided</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={report.keysHandover?.keysProvided || 0}
-                        onChange={(e) =>
-                          setReport({
-                            ...report,
-                            keysHandover: {
-                              ...report.keysHandover,
-                              keysProvided: parseInt(e.target.value) || 0
-                            }
-                          })
-                        }
-                      />
+                {/* Keys Handover Section - Omitted for Routine Inspections */}
+                {report.inspectionType !== 'routine' && (
+                  <div className="content-card">
+                    <div className="card-title-group">
+                      <div>
+                        <h2 className="card-title">Keys &amp; Access Handover</h2>
+                        <p className="card-subtitle">Document key quantities and access fobs/remotes provided</p>
+                      </div>
+                      <Key size={18} className="text-accent" />
                     </div>
 
-                    <div>
-                      <label className="input-label">Remotes / Access Fobs Provided</label>
-                      <input
-                        type="number"
-                        min="0"
-                        value={report.keysHandover?.remotesProvided || 0}
-                        onChange={(e) =>
-                          setReport({
-                            ...report,
-                            keysHandover: {
-                              ...report.keysHandover,
-                              remotesProvided: parseInt(e.target.value) || 0
-                            }
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label className="input-label">Key Handover Notes</label>
-                    <input
-                      type="text"
-                      value={report.keysHandover?.notes || ''}
-                      onChange={(e) =>
-                        setReport({
-                          ...report,
-                          keysHandover: {
-                            ...report.keysHandover,
-                            notes: e.target.value
+                    <div className="form-grid-2 mb-md">
+                      <div>
+                        <label className="input-label">Keys Count Provided</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={report.keysHandover?.keysProvided || 0}
+                          onChange={(e) =>
+                            setReport({
+                              ...report,
+                              keysHandover: {
+                                ...report.keysHandover,
+                                keysProvided: parseInt(e.target.value) || 0
+                              }
+                            })
                           }
-                        })
-                      }
-                      placeholder="e.g. 2x Front door, 1x Mailbox, 2x Garage remotes tested"
-                    />
+                        />
+                      </div>
+
+                      <div>
+                        <label className="input-label">Remotes / Access Fobs Provided</label>
+                        <input
+                          type="number"
+                          min="0"
+                          value={report.keysHandover?.remotesProvided || 0}
+                          onChange={(e) =>
+                            setReport({
+                              ...report,
+                              keysHandover: {
+                                ...report.keysHandover,
+                                remotesProvided: parseInt(e.target.value) || 0
+                              }
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="input-label">Key Handover Notes</label>
+                      <input
+                        type="text"
+                        value={report.keysHandover?.notes || ''}
+                        onChange={(e) =>
+                          setReport({
+                            ...report,
+                            keysHandover: {
+                              ...report.keysHandover,
+                              notes: e.target.value
+                            }
+                          })
+                        }
+                        placeholder="e.g. 2x Front door, 1x Mailbox, 2x Garage remotes tested"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
                 {/* Digital Signatures Grid */}
                 <div className="content-card">

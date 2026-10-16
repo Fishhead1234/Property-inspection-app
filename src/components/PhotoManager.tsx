@@ -11,6 +11,7 @@ import {
   Sparkles,
   UploadCloud
 } from 'lucide-react';
+import { MultiShotCameraModal } from './MultiShotCameraModal';
 
 interface Props {
   photos: InspectionPhoto[];
@@ -26,6 +27,7 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
   const [compressProgress, setCompressProgress] = useState<{ current: number; total: number } | null>(null);
   const [previewPhoto, setPreviewPhoto] = useState<InspectionPhoto | null>(null);
   const [isDragging, setIsDragging] = useState(false);
+  const [showMultiShot, setShowMultiShot] = useState(false);
 
   const processFiles = async (fileList: File[]) => {
     // Filter only images (supports folders containing non-image files or hidden files)
@@ -58,6 +60,21 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
       if (fileInputRef.current) fileInputRef.current.value = '';
       if (cameraInputRef.current) cameraInputRef.current.value = '';
       if (folderInputRef.current) folderInputRef.current.value = '';
+    }
+  };
+
+  const handleMultiShotSave = async (dataUrls: string[]) => {
+    try {
+      const files = await Promise.all(
+        dataUrls.map(async (dataUrl, idx) => {
+          const res = await fetch(dataUrl);
+          const blob = await res.blob();
+          return new File([blob], `shot_${Date.now()}_${idx + 1}.jpg`, { type: 'image/jpeg' });
+        })
+      );
+      await processFiles(files);
+    } catch (err) {
+      console.error('Error saving multi-shot photos:', err);
     }
   };
 
@@ -166,13 +183,13 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
       <div className="photo-actions-grid">
         <button
           type="button"
-          onClick={() => cameraInputRef.current?.click()}
+          onClick={() => setShowMultiShot(true)}
           disabled={isCompressing}
           className="btn-primary photo-action-btn"
-          title="Open camera to take photo on device"
+          title="Open live multi-shot camera to take continuous photos in this room"
         >
           <Camera size={16} className="stroke-[2.5]" />
-          <span>Take Photo</span>
+          <span>Multi-Shot Camera</span>
         </button>
 
         <button
@@ -349,6 +366,15 @@ export const PhotoManager: React.FC<Props> = ({ photos, areaName, onChange }) =>
             )}
           </div>
         </div>
+      )}
+
+      {/* Live Multi-Shot Viewfinder Modal */}
+      {showMultiShot && (
+        <MultiShotCameraModal
+          areaName={areaName}
+          onSave={handleMultiShotSave}
+          onClose={() => setShowMultiShot(false)}
+        />
       )}
     </div>
   );

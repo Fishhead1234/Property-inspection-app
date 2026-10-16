@@ -103,14 +103,25 @@ export async function generateA4PDF(report: InspectionReport): Promise<Blob> {
   doc.text('Lead Inspector:', margin + 105, currentY + 17);
   doc.text('Inspector Phone:', margin + 105, currentY + 25);
   doc.text('Inspector Email:', margin + 105, currentY + 33);
-  doc.text('Keys Handover:', margin + 105, currentY + 41);
+
+  const isRoutine = report.inspectionType === 'routine';
+  if (!isRoutine) {
+    doc.text('Keys Handover:', margin + 105, currentY + 41);
+  } else {
+    doc.text('Inspection Nature:', margin + 105, currentY + 41);
+  }
 
   doc.setFont('helvetica', 'bold');
   doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
   doc.text(report.inspectorName || 'N/A', margin + 135, currentY + 17);
   doc.text(report.inspectorPhone || 'N/A', margin + 135, currentY + 25);
   doc.text(report.inspectorEmail || 'N/A', margin + 135, currentY + 33);
-  doc.text(`${report.keysHandover?.keysProvided || 0} Keys / ${report.keysHandover?.remotesProvided || 0} Remotes`, margin + 135, currentY + 41);
+
+  if (!isRoutine) {
+    doc.text(`${report.keysHandover?.keysProvided || 0} Keys / ${report.keysHandover?.remotesProvided || 0} Remotes`, margin + 135, currentY + 41);
+  } else {
+    doc.text('Periodic Tenancy Routine', margin + 135, currentY + 41);
+  }
 
   currentY += 54;
 
@@ -333,8 +344,8 @@ export async function generateA4PDF(report: InspectionReport): Promise<Blob> {
     currentY += 10;
 
     const photoColWidth = (contentWidth - 6) / 2; // ~88mm wide
-    const photoImgHeight = 62; // ~62mm tall
-    const cardHeight = photoImgHeight + 18; // Includes caption & metadata
+    const maxImgH = 60; // 60mm tall photo display slot
+    const cardHeight = maxImgH + 18; // Includes caption & metadata
 
     for (let i = 0; i < allPhotosWithArea.length; i += 2) {
       checkPageBreak(cardHeight + 4);
@@ -345,36 +356,66 @@ export async function generateA4PDF(report: InspectionReport): Promise<Blob> {
         doc.setDrawColor(borderColor[0], borderColor[1], borderColor[2]);
         doc.roundedRect(x, currentY, photoColWidth, cardHeight, 1.5, 1.5, 'FD');
 
-        // Draw Image
+        const maxImgW = photoColWidth - 4;
+
+        // Clean neutral background for the photo frame
+        doc.setFillColor(241, 245, 249);
+        doc.roundedRect(x + 2, currentY + 2, maxImgW, maxImgH, 1, 1, 'F');
+
+        // Calculate TRUE proportional aspect ratio to prevent squishing/stretching
+        const origW = item.photo.width || 4;
+        const origH = item.photo.height || 3;
+        const imgAspect = origW / origH;
+        const boxAspect = maxImgW / maxImgH;
+
+        let renderW = maxImgW;
+        let renderH = maxImgH;
+        let renderX = x + 2;
+        let renderY = currentY + 2;
+
+        if (imgAspect > boxAspect) {
+          // Wider than box (e.g. 16:9 landscape): fit to width, center vertically
+          renderW = maxImgW;
+          renderH = maxImgW / imgAspect;
+          renderX = x + 2;
+          renderY = currentY + 2 + (maxImgH - renderH) / 2;
+        } else {
+          // Taller than box (e.g. 3:4 portrait on mobile): fit to height, center horizontally
+          renderH = maxImgH;
+          renderW = maxImgH * imgAspect;
+          renderX = x + 2 + (maxImgW - renderW) / 2;
+          renderY = currentY + 2;
+        }
+
+        // Draw Image with exact original proportions
         try {
-          doc.addImage(item.photo.dataUrl, 'JPEG', x + 2, currentY + 2, photoColWidth - 4, photoImgHeight);
+          doc.addImage(item.photo.dataUrl, 'JPEG', renderX, renderY, renderW, renderH);
         } catch (e) {
-          // Fallback if SVG dataUrl or image rendering error
           doc.setFillColor(226, 232, 240);
-          doc.rect(x + 2, currentY + 2, photoColWidth - 4, photoImgHeight, 'F');
+          doc.rect(x + 2, currentY + 2, maxImgW, maxImgH, 'F');
           doc.setFontSize(8);
           doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
-          doc.text('Photo Evidence', x + photoColWidth / 2, currentY + photoImgHeight / 2, { align: 'center' });
+          doc.text('Photo Evidence', x + photoColWidth / 2, currentY + maxImgH / 2, { align: 'center' });
         }
 
         // Area & Caption Box
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
         doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.text(item.areaName, x + 3, currentY + photoImgHeight + 6);
+        doc.text(item.areaName, x + 3, currentY + maxImgH + 6);
 
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7);
         doc.setTextColor(textMuted[0], textMuted[1], textMuted[2]);
         const caption = item.photo.caption || 'Inspection photographic record';
         const splitCap = doc.splitTextToSize(caption, photoColWidth - 6);
-        doc.text(splitCap, x + 3, currentY + photoImgHeight + 10.5);
+        doc.text(splitCap, x + 3, currentY + maxImgH + 10.5);
 
         // Date and size tag
         const sizeKb = Math.round(item.photo.compressedSize / 1024);
         doc.setFontSize(6.5);
         doc.setTextColor(accentColor[0], accentColor[1], accentColor[2]);
-        doc.text(`${new Date(item.photo.takenAt).toLocaleDateString()} • ${sizeKb} KB`, x + photoColWidth - 3, currentY + photoImgHeight + 6, { align: 'right' });
+        doc.text(`${new Date(item.photo.takenAt).toLocaleDateString()} • ${sizeKb} KB`, x + photoColWidth - 3, currentY + maxImgH + 6, { align: 'right' });
       };
 
       // Photo 1 (Left column)
