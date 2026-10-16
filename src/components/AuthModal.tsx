@@ -199,14 +199,14 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
         {/* Modal Body */}
         <div style={{ padding: '1.5rem' }}>
           {error && (
-            <div className="mb-4 p-3 rounded-lg bg-red-500/10 border border-red-500/30 text-red-400 text-xs flex items-start gap-2">
+            <div className="auth-status-box auth-status-error" style={{ marginBottom: '14px' }}>
               <AlertCircle size={16} className="shrink-0 mt-0.5" />
               <span>{error}</span>
             </div>
           )}
 
           {successMsg && (
-            <div className="mb-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs flex items-start gap-2">
+            <div className="auth-status-box auth-status-success" style={{ marginBottom: '14px' }}>
               <CheckCircle2 size={16} className="shrink-0 mt-0.5" />
               <span>{successMsg}</span>
             </div>
@@ -214,29 +214,29 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
 
           {/* Current User Logged In Screen */}
           {currentUser ? (
-            <div className="space-y-4">
-              <div className="p-4 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-medium text-slate-400">Active Account</span>
-                  <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                    Connected
+            <div className="auth-form-card">
+              <div className="auth-user-card">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: 600 }}>Active Cloud Account</span>
+                  <span className="cloud-badge-connected">
+                    <span className="cloud-pulse-dot" /> Connected
                   </span>
                 </div>
-                <div className="text-sm font-semibold text-white flex items-center gap-2">
-                  <Mail size={16} className="text-blue-400" />
+                <div style={{ fontSize: '14px', fontWeight: 700, color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Mail size={16} color="#38bdf8" />
                   {currentUser.email}
                 </div>
-                <p className="text-xs text-slate-400 mt-2">
+                <p style={{ fontSize: '12px', color: '#94a3b8', margin: 0, lineHeight: 1.4 }}>
                   All reports you create or edit will automatically sync with this account and be available on any device you sign in on.
                 </p>
               </div>
 
-              <div className="flex items-center justify-between pt-2">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '8px' }}>
                 <button
                   type="button"
                   onClick={() => setMode('config')}
-                  className="text-xs text-slate-400 hover:text-white flex items-center gap-1.5 transition-colors"
+                  className="btn-cloud-sync"
+                  style={{ padding: '6px 12px', fontSize: '12px' }}
                 >
                   <Settings size={14} /> Database Settings
                 </button>
@@ -244,7 +244,8 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
                   type="button"
                   onClick={handleSignOut}
                   disabled={loading}
-                  className="px-4 py-2 rounded-lg text-xs font-medium bg-red-500/15 text-red-300 hover:bg-red-500/25 border border-red-500/30 transition-all flex items-center gap-1.5"
+                  className="btn-cloud-sync"
+                  style={{ color: '#f87171', borderColor: 'rgba(239, 68, 68, 0.3)', padding: '6px 14px', fontSize: '12px' }}
                 >
                   {loading ? <RefreshCw size={14} className="animate-spin" /> : null}
                   Sign Out
@@ -254,31 +255,25 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
           ) : (
             <>
               {/* Navigation Tabs for Unauthenticated Mode */}
-              <div className="flex rounded-lg bg-slate-900/80 p-1 mb-5 border border-slate-800">
+              <div className="auth-tabs-row">
                 <button
                   type="button"
                   onClick={() => { setMode('signin'); setError(null); }}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                    mode === 'signin' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={`auth-tab-btn ${mode === 'signin' ? 'active' : ''}`}
                 >
                   <LogIn size={13} /> Sign In
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMode('signup'); setError(null); }}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                    mode === 'signup' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={`auth-tab-btn ${mode === 'signup' ? 'active' : ''}`}
                 >
                   <UserPlus size={13} /> Create Account
                 </button>
                 <button
                   type="button"
                   onClick={() => { setMode('config'); setError(null); }}
-                  className={`flex-1 py-1.5 text-xs font-medium rounded-md transition-all flex items-center justify-center gap-1.5 ${
-                    mode === 'config' ? 'bg-blue-600 text-white shadow' : 'text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={`auth-tab-btn ${mode === 'config' ? 'active' : ''}`}
                 >
                   <Database size={13} /> Cloud Setup
                 </button>
@@ -286,36 +281,32 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
 
               {/* Mode: Sign In */}
               {mode === 'signin' && (
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <form onSubmit={handleSignIn} className="auth-form-card">
+                  <div className="auth-field-group">
+                    <label className="auth-label">Email Address</label>
+                    <div className="auth-input-wrapper">
+                      <Mail size={16} className="auth-input-icon" />
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="inspector@agency.com"
-                        className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="auth-input"
                         required
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Password
-                    </label>
-                    <div className="relative">
-                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <div className="auth-field-group">
+                    <label className="auth-label">Password</label>
+                    <div className="auth-input-wrapper">
+                      <Lock size={16} className="auth-input-icon" />
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="••••••••"
-                        className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="auth-input"
                         required
                       />
                     </div>
@@ -324,13 +315,13 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-medium text-sm hover:from-blue-500 hover:to-indigo-500 transition-all shadow-lg shadow-blue-500/25 flex items-center justify-center gap-2"
+                    className="auth-submit-btn"
                   >
                     {loading ? <RefreshCw size={16} className="animate-spin" /> : <LogIn size={16} />}
-                    {loading ? 'Signing in...' : 'Sign In & Sync'}
+                    <span>{loading ? 'Signing in...' : 'Sign In & Sync'}</span>
                   </button>
 
-                  <p className="text-[11px] text-center text-slate-400">
+                  <p style={{ fontSize: '11px', textAlign: 'center', color: '#64748b', margin: 0 }}>
                     Signing in connects your inspections across all your devices and coworkers.
                   </p>
                 </form>
@@ -338,36 +329,32 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
 
               {/* Mode: Sign Up */}
               {mode === 'signup' && (
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Email Address
-                    </label>
-                    <div className="relative">
-                      <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                <form onSubmit={handleSignUp} className="auth-form-card">
+                  <div className="auth-field-group">
+                    <label className="auth-label">Email Address</label>
+                    <div className="auth-input-wrapper">
+                      <Mail size={16} className="auth-input-icon" />
                       <input
                         type="email"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="inspector@agency.com"
-                        className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="auth-input"
                         required
                       />
                     </div>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Choose Password
-                    </label>
-                    <div className="relative">
-                      <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+                  <div className="auth-field-group">
+                    <label className="auth-label">Choose Password</label>
+                    <div className="auth-input-wrapper">
+                      <Lock size={16} className="auth-input-icon" />
                       <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         placeholder="At least 6 characters"
-                        className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg pl-9 pr-3 py-2 text-sm text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                        className="auth-input"
                         required
                       />
                     </div>
@@ -376,14 +363,14 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full py-2.5 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-medium text-sm hover:from-emerald-500 hover:to-teal-500 transition-all shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2"
+                    className="auth-submit-btn"
                   >
                     {loading ? <RefreshCw size={16} className="animate-spin" /> : <UserPlus size={16} />}
-                    {loading ? 'Creating account...' : 'Create Account'}
+                    <span>{loading ? 'Creating account...' : 'Create Account'}</span>
                   </button>
 
-                  <div className="flex items-center gap-2 text-[11px] text-slate-400 bg-slate-900/60 p-2.5 rounded-lg border border-slate-800">
-                    <ShieldCheck size={16} className="text-emerald-400 shrink-0" />
+                  <div className="auth-status-box auth-status-info">
+                    <ShieldCheck size={16} className="shrink-0 mt-0.5" />
                     <span>Free cloud sync with automated real-time backups & encryption.</span>
                   </div>
                 </form>
@@ -391,70 +378,69 @@ export const AuthModal: React.FC<Props> = ({ currentUser, onClose, onAuthChange 
 
               {/* Mode: Cloud Config / Supabase Credentials */}
               {mode === 'config' && (
-                <div className="space-y-4">
-                  <div className="p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs text-blue-300 flex items-start gap-2">
-                    <Database size={16} className="shrink-0 mt-0.5 text-blue-400" />
+                <div className="auth-form-card">
+                  <div className="auth-status-box auth-status-info">
+                    <Database size={16} className="shrink-0 mt-0.5" />
                     <span>
-                      Connect your Supabase project URL & Anon Key to enable multi-device sync, or paste them below to test immediately!
+                      Connect your Supabase project URL &amp; Publishable Key to enable multi-device sync, or paste them below to connect immediately!
                     </span>
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Supabase Project URL
-                    </label>
+                  <div className="auth-field-group">
+                    <label className="auth-label">Supabase Project URL</label>
                     <input
                       type="url"
                       value={supabaseUrl}
                       onChange={(e) => setSupabaseUrl(e.target.value)}
                       placeholder="https://xyzcompany.supabase.co"
-                      className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-blue-500"
+                      className="auth-input"
+                      style={{ paddingLeft: '14px', fontFamily: 'monospace', fontSize: '12px' }}
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-medium text-slate-300 mb-1">
-                      Supabase Anon Public API Key
-                    </label>
+                  <div className="auth-field-group">
+                    <label className="auth-label">Supabase Publishable (or Anon) Key</label>
                     <textarea
                       value={supabaseKey}
                       onChange={(e) => setSupabaseKey(e.target.value)}
-                      placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                      placeholder="sb_publishable_... or eyJhbGci..."
                       rows={2}
-                      className="w-full bg-slate-900/90 border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-white placeholder-slate-500 font-mono focus:outline-none focus:border-blue-500 resize-none"
+                      className="auth-input-textarea"
                     />
                   </div>
 
                   {testStatus && (
-                    <div className="text-xs p-2.5 rounded-lg bg-slate-900 border border-slate-700 text-slate-200">
-                      {testStatus}
+                    <div className="auth-status-box auth-status-info">
+                      <span>{testStatus}</span>
                     </div>
                   )}
 
-                  <div className="flex gap-2">
+                  <div style={{ display: 'flex', gap: '8px' }}>
                     <button
                       type="button"
                       onClick={handleTestConnection}
-                      className="flex-1 py-2 rounded-lg bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs font-medium transition-all flex items-center justify-center gap-1.5 border border-slate-700"
+                      className="btn-cloud-sync"
+                      style={{ flex: 1, justifyContent: 'center' }}
                     >
                       <RefreshCw size={13} /> Test Connection
                     </button>
                     <button
                       type="button"
                       onClick={handleSaveConfig}
-                      className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-medium transition-all shadow-md flex items-center justify-center gap-1.5"
+                      className="btn-cloud-connect"
+                      style={{ flex: 1, justifyContent: 'center' }}
                     >
                       <CheckCircle2 size={13} /> Save Credentials
                     </button>
                   </div>
 
-                  <div className="pt-2 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400">
+                  <div style={{ paddingTop: '8px', borderTop: '1px solid #1e293b', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', color: '#94a3b8' }}>
                     <span>Don&apos;t have Supabase yet?</span>
                     <a
                       href="https://supabase.com"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-blue-400 hover:text-blue-300 inline-flex items-center gap-1 font-medium"
+                      style={{ color: '#38bdf8', display: 'inline-flex', alignItems: 'center', gap: '4px', textDecoration: 'none', fontWeight: 600 }}
                     >
                       Create Free Project <ExternalLink size={12} />
                     </a>

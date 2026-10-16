@@ -391,14 +391,19 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAuthModal(true)}
-                  className="px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-xs text-slate-200 transition-all flex items-center gap-1.5"
+                  className="btn-header-cloud"
+                  id="btn-header-cloud-sync"
                   title="Cloud Account & Database Settings"
                 >
-                  <Cloud size={14} className={currentUser ? 'text-emerald-400' : 'text-blue-400'} />
-                  <span className="hidden sm:inline">
-                    {currentUser ? currentUser.email?.split('@')[0] : 'Cloud Sync'}
+                  <Cloud size={16} className={currentUser ? 'text-emerald-400' : 'text-sky-400'} />
+                  <span>
+                    {currentUser ? currentUser.email?.split('@')[0] : 'Connect Cloud'}
                   </span>
-                  {currentUser && <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />}
+                  {currentUser ? (
+                    <span className="cloud-pulse-dot" />
+                  ) : (
+                    <span className="cloud-header-badge">Sync</span>
+                  )}
                 </button>
 
                 <button
@@ -439,14 +444,17 @@ export const App: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => setShowAuthModal(true)}
-                  className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-xs text-slate-200 transition-all mr-xs"
+                  className="btn-header-cloud"
                   title="Cloud Account & Sync"
                 >
-                  <Cloud size={14} className={currentUser ? 'text-emerald-400' : 'text-blue-400'} />
+                  <Cloud size={14} className={currentUser ? 'text-emerald-400' : 'text-sky-400'} />
+                  <span className="hidden sm:inline">
+                    {currentUser ? currentUser.email?.split('@')[0] : 'Cloud'}
+                  </span>
                   {currentUser ? (
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="cloud-pulse-dot" />
                   ) : (
-                    <span className="hidden lg:inline text-muted text-[11px]">Local</span>
+                    <span className="cloud-header-badge">Sync</span>
                   )}
                 </button>
 

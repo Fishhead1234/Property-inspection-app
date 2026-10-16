@@ -19,7 +19,7 @@ import {
   ArrowRight,
   Cloud,
   RefreshCw,
-  User as UserIcon
+  Database
 } from 'lucide-react';
 
 interface Props {
@@ -112,30 +112,43 @@ export const DashboardView: React.FC<Props> = ({
             )}
           </div>
 
-          {/* Cloud Sync & Account Status Bar */}
-          <div className="mt-4 pt-3.5 border-t border-slate-700/60 flex flex-wrap items-center justify-between gap-3 text-xs">
-            {currentUser ? (
-              <div className="flex items-center gap-2 text-slate-300">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                <span className="font-semibold text-white">Cloud Active:</span>
-                <span className="text-slate-400 font-mono text-[11px] truncate max-w-[200px]">{currentUser.email}</span>
+          {/* High-Visibility Cloud Sync & Database Banner */}
+          <div className="dashboard-cloud-banner">
+            <div className="cloud-banner-left">
+              <div className="cloud-banner-icon-box">
+                <Cloud size={24} className={currentUser ? 'text-emerald-400' : 'text-sky-400'} />
               </div>
-            ) : (
-              <div className="flex items-center gap-2 text-slate-400">
-                <Cloud size={14} className="text-blue-400 shrink-0" />
-                <span>Local Database (Sign in to sync across devices & team)</span>
+              <div>
+                <div className="cloud-banner-title-row">
+                  <span className="cloud-banner-title">
+                    {currentUser ? 'Cloud Team Sync Active' : 'Multi-Device Cloud Database'}
+                  </span>
+                  {currentUser ? (
+                    <span className="cloud-badge-connected">
+                      <span className="cloud-pulse-dot" /> Connected
+                    </span>
+                  ) : (
+                    <span className="cloud-badge-local">Local Mode</span>
+                  )}
+                </div>
+                <p className="cloud-banner-desc">
+                  {currentUser
+                    ? `Signed in as ${currentUser.email} • Inspections sync in real-time across your team`
+                    : 'Connect your free Supabase database to sync all inspections across your phone, tablet, and team.'}
+                </p>
               </div>
-            )}
+            </div>
 
-            <div className="flex items-center gap-2">
+            <div className="cloud-banner-actions">
               {currentUser && onSyncCloud && (
                 <button
                   type="button"
                   onClick={onSyncCloud}
                   disabled={isSyncing}
-                  className="px-2.5 py-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center gap-1.5 transition-all text-xs"
+                  className="btn-cloud-sync"
+                  title="Sync with cloud now"
                 >
-                  <RefreshCw size={12} className={isSyncing ? 'animate-spin text-blue-400' : ''} />
+                  <RefreshCw size={14} className={isSyncing ? 'animate-spin' : ''} />
                   <span>{isSyncing ? 'Syncing...' : 'Sync Cloud'}</span>
                 </button>
               )}
@@ -143,10 +156,11 @@ export const DashboardView: React.FC<Props> = ({
                 <button
                   type="button"
                   onClick={onOpenAuth}
-                  className="px-2.5 py-1 rounded bg-blue-600/20 hover:bg-blue-600/30 text-blue-300 border border-blue-500/30 flex items-center gap-1.5 transition-all text-xs font-medium"
+                  className="btn-cloud-connect"
+                  id="btn-open-cloud-setup"
                 >
-                  <UserIcon size={12} />
-                  <span>{currentUser ? 'Account & Settings' : 'Connect Cloud / Sign In'}</span>
+                  <Database size={15} />
+                  <span>{currentUser ? 'Account & Settings' : 'Connect Cloud Database'}</span>
                 </button>
               )}
             </div>
